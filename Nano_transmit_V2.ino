@@ -42,13 +42,7 @@ void loop() {
     //lit la valeur potvaly
     uint8_t potvaly = dataStream[1];
     Serial.println(potvaly);
-    
-  
-    //remplacer les valeurs 330 et 645 par les 
-    //valeurs min et max de la calibration
-    byte potval_1 = map(potvaly,330,645,0,255);
-    //Serial.print(potval_1);
-    Serial.write(potval_1);
+    Serial.write(potvaly);
     delay(20);
   }
 }
