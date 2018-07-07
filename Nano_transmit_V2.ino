@@ -54,6 +54,9 @@ void loop() {
     Serial.println(c_button);
     Serial.println(z_button);
     Serial.println();
+    
+    Serial.write(potvaly);
+    Serial.write(z_button);
 
   }
   delay(20);
