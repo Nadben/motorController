@@ -18,7 +18,7 @@ void setup() {
   Wire.write((uint8_t)0x00);
   Wire.endTransmission();
 
-  Serial.begin(19200);
+  Serial.begin(9600); //xbee's baudrate is 9600
 
   
 
@@ -48,15 +48,15 @@ void loop() {
     bool c_button = (dataStream[5] >> 1) & 1;
    
 
-    Serial.print("Joy y:");
-    Serial.print(potvaly, DEC);
-    Serial.println();
-    Serial.println(c_button);
-    Serial.println(z_button);
-    Serial.println();
+    //Serial.print("Joy y:");
+    //Serial.print(potvaly, DEC);
+    //Serial.println();
+    //Serial.println(c_button);
+    //Serial.println(z_button);
+    //Serial.println();
     
-    Serial.write(potvaly);
-    Serial.write(z_button);
+    Serial.write(potvaly);//Send to xbee
+    //Serial.write(z_button);
 
   }
   delay(20);
