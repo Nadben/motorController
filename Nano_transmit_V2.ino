@@ -2,6 +2,8 @@
 
 byte dataStream[6]; //array de 6 bytes
 int counter = 0 ;
+char startTransmissionWord = '[' ;
+char endTransmissionWord = ']' ;
 
 void setup() {
 
@@ -55,8 +57,11 @@ void loop() {
     //Serial.println(z_button);
     //Serial.println();
     
+    //Serial.write(startTransmissionWord);
     Serial.write(potvaly);//Send to xbee
     //Serial.write(z_button);
+    //Serial.write(c_button);
+    //Serial.write(endTransmissionWord);
 
   }
   delay(20);
