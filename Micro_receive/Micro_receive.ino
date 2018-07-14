@@ -2,26 +2,24 @@
 #include <Servo.h>
 
 /*VARIABLES GLOBALES*/
-byte dataStream [3]; //array de 5 bytes
-
-char startTransmissionWord = '[';
-char endTransmissionWord = ']';
-
-bool zButton = true;
-bool cButton = true;
-bool rcvInProgress = true;
-bool keepCurrent = true;
-bool newData = false;
-
-unsigned char inchar;
-unsigned char potvaly;
-
-int value ;
+byte inchar;
 int throttle;
-int cnt = 0;
-
-/*Objets*/
 Servo esc ;
+
+byte potvaly;
+byte arr [4];
+byte cnt = 0;
+
+bool zButton;
+bool cButton;
+bool keepCurrent = true;
+
+static unsigned long lastAccelTime = 0;
+
+int spd = 1300;
+int consigneMax = 2000;
+int increment = 20;
+int accel = 75;
 
 void setup() {
   esc.attach(9);
@@ -30,47 +28,50 @@ void setup() {
 }
 
 void loop() {
-
-  if(Serial1.available() == 0){//serial1
-    throttle = 1390;// Si nous ne recevons plus de donnee du Xbee on se met a neutre
-    esc.write(throttle);
+  if(Serial1.available() == 0){
+    throttle = 1390;
+    esc.write(throttle);// Si nous ne recevons plus de donnee du Xbee on se met a neutre
     Serial.println(throttle);
-  }else { while (Serial1.available() > 0 and newData == false){//serial 1
-      inchar = Serial.read();
-      //start/end transmission
-      if( rcvInProgress == true){
-        if(inchar != endTransmissionWord){
-          dataStream[cnt] = inchar;
-          cnt++;
-        }
-        else{
+  }else { while (Serial1.available()>0){
+      inchar = Serial1.read();
+      if(inchar != 93){
+        arr[cnt] = inchar;
+        cnt++;
+      }else{
+        
+        potvaly = arr [1];
+        zButton = arr [2];
+        cButton = arr [3];
 
-          potvaly = dataStream[1];
-          zButton = dataStream[2];
-          cButton = dataStream[3];
+        //Serial.println(zButton);
+        cnt = 0;
 
-          // cruise control
-          if(!zButton){
-            if(keepCurrent = true){
-              throttle = map(potvaly, 0, 255, 700, 2000);
-              esc.write(throttle);
-              keepCurrent = false;
-            }
-            Serial.println(throttle);// pour debugger la valeur
-
-          }else{
+        if(!zButton && cButton){
+          if(keepCurrent == true){
             throttle = map(potvaly, 0, 255, 700, 2000);
             esc.write(throttle);
-            Serial.println(throttle);// pour debugger la valeur
-            keepCurrent = true;
-            rcvInProgress = false;
-            newData = true;
-            cnt = 0;
+            keepCurrent = false;
+          }
+        }else if(!cButton && zButton){
+          //static unsigned long lastAccelTime = 0;
+          unsigned long currentTime = millis();
+          if(currentTime - lastAccelTime > accel){
+            lastAccelTime = currentTime;
+            if( spd < consigneMax){
+              spd += increment;
+              Serial.println(spd);
+            }
           }
         }
-      }
-      else if (inchar == startTransmissionWord){
-        rcvInProgress = true;
+        
+        else{
+          //Serial.println(potvaly);
+          spd = 1300;
+          throttle = map(potvaly, 27, 235, 700, 2000);
+          esc.write(throttle);
+          Serial.println(throttle);// pour debugger la valeur 
+          keepCurrent = true;       
+        }
       }
     }
     delay(20); // delay pour attendre que les donnes soient recu au cas d'un decrochage
