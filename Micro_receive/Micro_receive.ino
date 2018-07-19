@@ -59,6 +59,7 @@ void loop() {
             lastAccelTime = currentTime;
             if( spd < consigneMax){
               spd += increment;
+              esc.write(spd);
               Serial.println(spd);
             }
           }
