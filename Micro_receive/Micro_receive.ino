@@ -2,75 +2,88 @@
 #include <Servo.h>
 
 /*VARIABLES GLOBALES*/
-byte inchar;
-int throttle;
+
 Servo esc ;
 
+char beginTransmissionWord = '[';
+char endTransmissionWord = ']';
+
+
+byte inchar;
 byte potvaly;
 byte arr [4];
 byte cnt = 0;
 
+bool keepCurrent = true;
 bool zButton;
 bool cButton;
-bool keepCurrent = true;
 
 static unsigned long lastAccelTime = 0;
 
-int spd = 1300;
+int neutral = 1300;
 int consigneMax = 2000;
 int increment = 20;
-int accel = 75;
+int accel = 200;
+int throttle;
+int spd;
+
+
 
 void setup() {
-  esc.attach(9);
-  Serial.begin(9600);
-  Serial1.begin(9600);
+  esc.attach(9); //pin 
+  Serial.begin(9600); 
+  Serial1.begin(9600); //Micro hardware Serial where the xbee is connected
 }
 
 void loop() {
-  if(Serial1.available() == 0){
-    throttle = 1390;
-    esc.write(throttle);// Si nous ne recevons plus de donnee du Xbee on se met a neutre
-    Serial.println(throttle);
-  }else { while (Serial1.available()>0){
+  delay(100); //for some reason it reduces the random cuts that I have
+  if(Serial1.available() == 0) { //If we lose connection, then we go immediately to neutral.
+    throttle = neutral;
+    esc.write(throttle);
+    //Serial.println(throttle);
+  }
+  else {     
+    while (Serial1.available()>0) {
       inchar = Serial1.read();
-      if(inchar != 93){
+      
+      if(inchar != endTransmissionWord) {
         arr[cnt] = inchar;
         cnt++;
-      }else{
-        
+      }
+      
+      else {        
         potvaly = arr [1];
         zButton = arr [2];
         cButton = arr [3];
 
-        //Serial.println(zButton);
         cnt = 0;
 
-        if(!zButton && cButton){
-          if(keepCurrent == true){
+        if(!zButton && cButton) {
+          if(keepCurrent == true) {
             throttle = map(potvaly, 0, 255, 700, 2000);
             esc.write(throttle);
             keepCurrent = false;
           }
-        }else if(!cButton && zButton){
-          //static unsigned long lastAccelTime = 0;
+        }
+        
+        else if(!cButton && zButton) {
           unsigned long currentTime = millis();
-          if(currentTime - lastAccelTime > accel){
+          if(currentTime - lastAccelTime > accel) {
             lastAccelTime = currentTime;
-            if( spd < consigneMax){
+            if( spd < consigneMax) {
               spd += increment;
               esc.write(spd);
-              Serial.println(spd);
+              //Serial.println(spd);
             }
           }
         }
         
-        else{
+        else {
           //Serial.println(potvaly);
-          spd = 1300;
+          spd = neutral;
           throttle = map(potvaly, 27, 235, 700, 2000);
           esc.write(throttle);
-          Serial.println(throttle);// pour debugger la valeur 
+          //Serial.println(throttle);
           keepCurrent = true;       
         }
       }
