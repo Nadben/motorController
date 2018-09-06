@@ -1,0 +1,89 @@
+#include <SoftwareSerial.h>
+#include <TinyWire.h>
+
+
+// 
+// Pinout ATtiny25/45/85:
+// PDIP/SOIC/TSSOP
+// =============================================================================================
+//         (PCINT5/RESET/ADC0/dW) PB5   [1]*  [8]   VCC
+//  (PCINT3/XTAL1/CLKI/OC1B/ADC3) PB3   [2]   [7]   PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2)
+//  (PCINT4/XTAL2/CLKO/OC1B/ADC2) PB4   [3]   [6]   PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1)
+//                                GND   [4]   [5]   PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)
+// 
+
+
+
+#define RX 3
+#define TX 4
+
+byte dataStream[6]; //array de 6 bytes
+int counter = 0;
+int potvalx;
+int potvaly;
+bool z_button;
+bool c_button;
+char startTransmissionWord = '[';
+char endTransmissionWord = ']';
+
+SoftwareSeial Serial(RX,TX);
+
+void setup() {
+    
+  //initialize the nunchuk without encryption
+  TinyWire.beginTransmission(0x52);
+  TinyWire.send((uint8_t)0xF0);
+  TinyWire.send((uint8_t)0x55);
+  TinyWire.endTransmission();
+
+  TinyWire.beginTransmission(0x52);
+  TinyWire.send((uint8_t)0xFB);
+  TinyWire.send((uint8_t)0x00);
+  TinyWire.endTransmission();
+  
+  Serial.begin(9600);
+  TinyWire.begin();
+  
+}
+
+
+void send_request(){
+
+  TinyWire.beginTransmission(0x52);
+  TinyWire.send((uint8_t)0x00);
+  TinyWire.endTransmission();
+  
+}
+
+
+void loop() {
+
+  TinyWire.requestFrom(0x52,6);
+  counter = 0;
+  while(TinyWire.available()){
+    dataStream[counter++] = TinyWire.read();
+  }
+  send_request(); //sans ca ca fuck up everything
+  
+  if(counter >= 5){
+
+    potvalx = dataStream[0];
+    potvaly = dataStream[1];
+    z_button = (dataStream[5] >> 0) & 1; 
+    c_button = (dataStream[5] >> 1) & 1;
+
+    Serial.write(startTransmissionWord);
+    Serial.write(potvaly);
+    Serial.write(z_button);
+    Serial.write(c_button);
+    Serial.write(endTransmissionWord);
+  }
+  delay(20);
+}
+
+
+
+
+
+
+
