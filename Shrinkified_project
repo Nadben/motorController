@@ -6,15 +6,15 @@
 // Pinout ATtiny25/45/85:
 // PDIP/SOIC/TSSOP
 // =============================================================================================
-//         (PCINT5/RESET/ADC0/dW) PB5   [1]*  [8]   VCC
-//  (PCINT3/XTAL1/CLKI/OC1B/ADC3) PB3   [2]   [7]   PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2)
-//  (PCINT4/XTAL2/CLKO/OC1B/ADC2) PB4   [3]   [6]   PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1)
-//                                GND   [4]   [5]   PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)
+//                      (PCINT5/RESET/ADC0/dW) PB5   [1]*  [8]   VCC
+//              (PCINT3/XTAL1/CLKI/OC1B/ADC3)  PB3   [2]   [7]   PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2)
+//  (PCINT4/XTAL2/CLKO/OC1B/ADC2)(Used for TX) PB4   [3]   [6]   PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1) (used for RX)
+//                                             GND   [4]   [5]   PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)
 // 
 
 
 
-#define RX 3
+#define RX 1
 #define TX 4
 
 byte dataStream[6]; //array de 6 bytes
@@ -26,7 +26,7 @@ bool c_button;
 char startTransmissionWord = '[';
 char endTransmissionWord = ']';
 
-SoftwareSeial Serial(RX,TX);
+SoftwareSeial xbeeSerial(RX,TX);
 
 void setup() {
     
@@ -41,7 +41,7 @@ void setup() {
   TinyWire.send((uint8_t)0x00);
   TinyWire.endTransmission();
   
-  Serial.begin(9600);
+  xbeeSerial.begin(9600);
   TinyWire.begin();
   
 }
@@ -72,11 +72,11 @@ void loop() {
     z_button = (dataStream[5] >> 0) & 1; 
     c_button = (dataStream[5] >> 1) & 1;
 
-    Serial.write(startTransmissionWord);
-    Serial.write(potvaly);
-    Serial.write(z_button);
-    Serial.write(c_button);
-    Serial.write(endTransmissionWord);
+    xbeeSerial.write(startTransmissionWord);
+    xbeeSerial.write(potvaly);
+    xbeeSerial.write(z_button);
+    xbeeSerial.write(c_button);
+    xbeeSerial.write(endTransmissionWord);
   }
   delay(20);
 }
